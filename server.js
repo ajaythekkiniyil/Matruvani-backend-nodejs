@@ -48,60 +48,57 @@ app.post('/', function (req, res) {
 	var hash = cryp.digest('hex');
 	res.setHeader("Content-Type", "text/json");
 	res.setHeader("Access-Control-Allow-Origin", "*");
-	res.send({txnid,key,hash})
+	res.send({ txnid, key, hash })
 });
 
 app.post('/payment-status', function (req, res) {
-	if(req.body.status === 'failure'){
-		res.redirect(urls.paymentStatusUrl)
+	
+	if (req.body.status === 'success') {
+
+		var verified = 'No';
+		var txnid = req.body.txnid;
+		var amount = req.body.amount;
+		var productinfo = req.body.productinfo;
+		var firstname = req.body.firstname;
+		var email = req.body.email;
+		var udf5 = req.body.udf5;
+		var mihpayid = req.body.mihpayid;
+		var status = req.body.status;
+		var resphash = req.body.hash;
+		var additionalcharges = "";
+
+		//Calculate response hash to verify	
+		var keyString = key + '|' + txnid + '|' + amount + '|' + productinfo + '|' + firstname + '|' + email + '|||||' + udf5 + '|||||';
+		var keyArray = keyString.split('|');
+		var reverseKeyArray = keyArray.reverse();
+		var reverseKeyString = salt + '|' + status + '|' + reverseKeyArray.join('|');
+		//check for presence of additionalcharges parameter in response.
+		if (typeof req.body.additionalCharges !== 'undefined') {
+			additionalcharges = req.body.additionalCharges;
+			//hash with additionalcharges
+			reverseKeyString = additionalcharges + '|' + reverseKeyString;
+		}
+		//Generate Hash
+		var cryp = crypto.createHash('sha512');
+		cryp.update(reverseKeyString);
+		var calchash = cryp.digest('hex');
+		// console.log('calchash' + calchash);
+		var msg = 'Payment failed for Hash not verified...<br />Check Console Log for full response...';
+		// Comapre status and hash. Hash verification is mandatory.
+		if (calchash == resphash){
+			res.redirect(urls.paymentStatusUrlSuccess)
+		}
+		else{
+			res.redirect(urls.paymentStatusUrlFailed)
+		}
+
 	}
-	// const error_Message = req.body.error_Message
-	// const unmappedstatus = req.body.unmappedstatus
-	// const status = req.body.status
-
-	// var verified = 'No';
-	// var txnid = req.body.txnid;
-	// var amount = req.body.amount;
-	// var productinfo = req.body.productinfo;
-	// var firstname = req.body.firstname;
-	// var email = req.body.email;
-	// var udf5 = req.body.udf5;
-	// var mihpayid = req.body.mihpayid;
-	// var status = req.body.status;
-	// var resphash = req.body.hash;
-	// var additionalcharges = "";
-
-	//Calculate response hash to verify	
-	// var keyString = key + '|' + txnid + '|' + amount + '|' + productinfo + '|' + firstname + '|' + email + '|||||' + udf5 + '|||||';
-	// var keyArray = keyString.split('|');
-	// var reverseKeyArray = keyArray.reverse();
-	// var reverseKeyString = salt + '|' + status + '|' + reverseKeyArray.join('|');
-	//check for presence of additionalcharges parameter in response.
-	// if (typeof req.body.additionalCharges !== 'undefined') {
-	// 	additionalcharges = req.body.additionalCharges;
-	// 	//hash with additionalcharges
-	// 	reverseKeyString = additionalcharges + '|' + reverseKeyString;
-	// }
-	//Generate Hash
-	// var cryp = crypto.createHash('sha512');
-	// cryp.update(reverseKeyString);
-	// var calchash = cryp.digest('hex');
-	// console.log('calchash' + calchash);
-	// var msg = 'Payment failed for Hash not verified...<br />Check Console Log for full response...';
-	//Comapre status and hash. Hash verification is mandatory.
-	// if (calchash == resphash)
-	// 	msg = 'Transaction Successful and Hash Verified...<br />Check Console Log for full response...';
-
-	// res.send('Success')
+	else {
+		res.redirect(urls.paymentStatusUrlFailed)
+	}
 
 });
 
-// app.post('/cancel', function (req, res) {
-// 	res.send('payment cancelled by user')
-// })
-// app.post('/failed', function (req, res) {
-// 	res.send('payment failed')
-// })
 
 const port = process.env.PORT || 3001
-app.listen(port, ()=>console.log('server started on port:' + port));
+app.listen(port, () => console.log('server started on port:' + port));
