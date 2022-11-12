@@ -32,6 +32,10 @@ require('dotenv').config()
 var key = process.env.PAYU_KEY
 var salt = process.env.PAYU_SALT
 
+app.get('/',(req,res)=>{
+	res.send('nodejs api')
+})
+
 app.post('/', function (req, res) {
 	// creating txnid
 	var ord = JSON.stringify(Math.random() * 1000);
@@ -48,6 +52,11 @@ app.post('/', function (req, res) {
 	var hash = cryp.digest('hex');
 	res.setHeader("Content-Type", "text/json");
 	res.setHeader("Access-Control-Allow-Origin", "*");
+
+	console.log('key ' + key);
+	console.log('salt ' + salt);
+	console.log('txnid ' + txnid);
+	
 	res.send({ txnid, key, hash })
 });
 
