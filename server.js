@@ -32,6 +32,9 @@ require('dotenv').config()
 var key = process.env.PAYU_KEY
 var salt = process.env.PAYU_SALT
 
+console.log(key);
+console.log(salt);
+
 app.get('/',(req,res)=>{
 	res.send('nodejs api')
 })
@@ -52,11 +55,6 @@ app.post('/', function (req, res) {
 	var hash = cryp.digest('hex');
 	res.setHeader("Content-Type", "text/json");
 	res.setHeader("Access-Control-Allow-Origin", "*");
-
-	console.log('key ' + key);
-	console.log('salt ' + salt);
-	console.log('txnid ' + txnid);
-	
 	res.send({ txnid, key, hash })
 });
 
